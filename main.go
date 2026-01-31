@@ -85,7 +85,7 @@ func (m *Model) Prev() {
 
 // TODO: Call this on tea.WindowSizeMsg
 func (m *Model) initLists(width, height int) {
-	defaultList := list.New([]list.Item{}, list.NewDefaultDelegate(), width/divisor, height-divisor)
+	defaultList := list.New([]list.Item{}, list.NewDefaultDelegate(), width/divisor, height/2)
 	defaultList.SetShowHelp(false)
 	m.lists = []list.Model{defaultList, defaultList, defaultList}
 
@@ -118,6 +118,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		if !m.loaded {
+			columnStyle.Width(msg.Width / divisor)
+			focusedStyle.Width(msg.Width / divisor)
+			columnStyle.Height(msg.Height - divisor)
+			focusedStyle.Height(msg.Height - divisor)
 			m.initLists(msg.Width, msg.Height)
 			m.loaded = true
 		}
@@ -148,6 +152,20 @@ func (m Model) View() string {
 		doneView := m.lists[done].View()
 
 		switch m.focused {
+		case inProgress:
+			return lipgloss.JoinHorizontal(
+				lipgloss.Left,
+				columnStyle.Render(todoView),
+				focusedStyle.Render(inProgView),
+				columnStyle.Render(doneView),
+			)
+		case done:
+			return lipgloss.JoinHorizontal(
+				lipgloss.Left,
+				columnStyle.Render(todoView),
+				columnStyle.Render(inProgView),
+				focusedStyle.Render(doneView),
+			)
 		default:
 			return lipgloss.JoinHorizontal(
 				lipgloss.Left,
